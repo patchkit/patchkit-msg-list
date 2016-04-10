@@ -268,10 +268,14 @@ export default class MsgList extends React.Component {
     let source = this.props.source || this.context.ssb.createFeedStream
     let cursor = this.props.cursor || ((msg) => { if (msg) { return msg.value.timestamp } })
     let updatedMsgs = (fresh) ? [] : this.state.msgs
+    let sourceOpts = { threads: this.props.threads, reverse: true, lt: cursor(this.botcursor) }
+
+    if (!this.props.filter) // if we're not doing a live filter, tell the server our limit
+      sourceOpts.limit = amt
 
     this.setState({ isLoading: true })
     pull(
-      source({ threads: this.props.threads, reverse: true, lt: cursor(this.botcursor) }),
+      source(sourceOpts),
       pull.through(msg => { lastmsg = msg }), // track last message processed
       pull.asyncMap((msg, cb) => threadlib.decryptThread(this.context.ssb, msg, cb)), // decrypt the message
       (this.props.filter) ? pull.filter(this.props.filter) : undefined, // run the fixed filter
