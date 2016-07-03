@@ -8,6 +8,7 @@ import threadlib from 'patchwork-threads'
 import SimpleInfinite from 'patchkit-simple-infinite'
 import explain from 'explain-error'
 import u from 'patchkit-util'
+import t from 'patchwork-translations'
 
 // how many messages to fetch in a batch?
 const DEFAULT_BATCH_LOAD_AMT = 30
@@ -83,7 +84,7 @@ export default class MsgList extends React.Component {
         // toggle in the DB
         ssb.patchwork.toggleBookmark(msg.key, (err, isBookmarked) => {
           if (err)
-            return events.emit('error', explain(err, 'Failed to toggle bookmark'))
+            return events.emit('error', explain(err, t('error.toggleBookmark')))
 
           // re-render
           msg.isBookmarked = isBookmarked
@@ -104,7 +105,7 @@ export default class MsgList extends React.Component {
         var voteMsg = schemas.vote(msg.key, newVote)
         let done = (err) => {
           if (err)
-            return events.emit('error', explain(err, 'Failed to publish vote'))
+            return events.emit('error', explain(err, t('error.publishVote')))
 
           // re-render
           msg.votes[this.context.user.id] = newVote
@@ -198,7 +199,7 @@ export default class MsgList extends React.Component {
 
   loadingElement() {
     return <div className="msg-view summary">
-      Loading...
+      {t('Loading')}
     </div>
   }
 
@@ -283,7 +284,7 @@ export default class MsgList extends React.Component {
       pull.take(amt), // apply limit
       pull.collect((err, msgs) => {
         if (err)
-          console.warn('Error while fetching messages', err)
+          console.warn(t('error.fetchingMessages'), err)
 
         // add msgs
         if (msgs)
@@ -364,12 +365,12 @@ export default class MsgList extends React.Component {
       lastDate = moment(m.ts || m.value.timestamp).endOf('day')
       if (this.props.dateDividers && !lastDate.isSame(oldLastDate, 'day')) {
         let label = (lastDate.isSame(endOfToday, 'day'))
-          ? 'today'
+          ? t('msgs.today')
           : (lastDate.isSame(endOfToday, 'month'))
             ? lastDate.from(endOfToday)
             : (lastDate.isSame(endOfToday, 'year'))
               ? lastDate.format("dddd, MMMM Do")
-              : lastDate.format("MMMM Do YYYY")
+              : lastDate.format("LL")
         listEls.push(<hr key={m.key+'-divider'} className="labeled" data-label={label} />)
       }
 
@@ -411,12 +412,12 @@ export default class MsgList extends React.Component {
             <div className="flex-fill">
               { TopNav ? <TopNav {...this.props.topNavProps} /> : '' }
               { nQueued ?
-                <a className="new-msg-queue" onClick={this.reload.bind(this)}>{nQueued} new update{u.plural(nQueued)}</a>
+                <a className="new-msg-queue" onClick={this.reload.bind(this)}>{t('msgs.newUpdates', u.plural(nQueued))}</a>
                 : '' }
-              { this.state.msgs.length === 0 && this.state.isLoading ? <div style={{fontWeight: 300, textAlign: 'center'}}>Loading...</div> : '' }
+              { this.state.msgs.length === 0 && this.state.isLoading ? <div style={{fontWeight: 300, textAlign: 'center'}}>{t('Loading')}</div> : '' }
               { isEmpty ?
                 <div className="empty-msg">
-                  { (this.props.emptyMsg || 'No messages.') }
+                  { (this.props.emptyMsg || t('msgs.NoMessages')) }
                 </div>
                 :
                 <ReactCSSTransitionGroup component="div" transitionName="fade" transitionAppear={true} transitionAppearTimeout={500} transitionEnterTimeout={500} transitionLeaveTimeout={1}>
